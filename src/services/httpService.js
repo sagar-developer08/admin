@@ -1,17 +1,8 @@
-import axios from 'axios';
+import apiClient from '../utils/api';
 import Cookies from 'js-cookie';
 
-const instance = axios.create({
-  baseURL: `${process.env.REACT_APP_API_BASE_URL}`,
-  timeout: 50000,
-  headers: {
-    Accept: 'application/json',
-    'Content-Type': 'application/json',
-  },
-});
-
 // Add a request interceptor
-instance.interceptors.request.use(function (config) {
+apiClient.interceptors.request.use(function (config) {
   // Do something before request is sent
   let adminInfo;
   if (Cookies.get('adminInfo')) {
@@ -30,6 +21,9 @@ instance.interceptors.request.use(function (config) {
   return {
     ...config,
     headers: {
+      ...config.headers,
+      'Content-Type': 'application/json',
+      Accept: 'application/json',
       authorization: adminInfo ? `Bearer ${adminInfo.token}` : null,
       company: company ? company : null,
     },
@@ -39,17 +33,11 @@ instance.interceptors.request.use(function (config) {
 const responseBody = (response) => response.data;
 
 const requests = {
-  get: (url, body, headers) =>
-    instance.get(url, body, headers).then(responseBody),
-
-  post: (url, body) => instance.post(url, body).then(responseBody),
-
-  put: (url, body, headers) =>
-    instance.put(url, body, headers).then(responseBody),
-
-  patch: (url, body) => instance.patch(url, body).then(responseBody),
-
-  delete: (url, body) => instance.delete(url, body).then(responseBody),
+  get: (url, body, headers) => apiClient.get(url, { params: body, headers }),
+  post: (url, body) => apiClient.post(url, body),
+  put: (url, body, headers) => apiClient.put(url, body, headers),
+  patch: (url, body) => apiClient.patch(url, body),
+  delete: (url, body) => apiClient.delete(url, { data: body }),
 };
 
 export default requests;
